@@ -242,10 +242,12 @@ typedef struct fsi_stat_struct__ {
 
 
 enum e_nfs_state {
-  NFS_OPEN = 0,
-  NFS_CLOSE,
-  CCL_CLOSING,
-  CCL_CLOSE
+  NFS_OPEN     = 1,
+  NFS_CLOSE    = 2,
+  CCL_CLOSING  = 4,
+  CCL_CLOSE    = 8,
+
+  IGNORE_STATE = 16
 };
 
 // ----------------------------------------------------------------------------
@@ -818,6 +820,9 @@ int ccl_symlink(ccl_context_t * pvfs_handle,
                 const char    * path,
                 const char    * link_content);
 void ccl_update_handle_last_io_timestamp(int handle_index);
+int ccl_update_handle_nfs_state(int              handle_index,
+				enum e_nfs_state state,
+				int              expected_state);
 
 // ---------------------------------------------------------------------------
 // CCL Up Call ptorotypes - both the Samba VFS layer and the Ganesha PTFSAL
