@@ -54,6 +54,8 @@
 #define MAX_FSI_IO_THREADS                          256
 #define MAX_FSI_NON_IO_THREADS                      256
 
+#define MSGRCV_EMPTY_QUEUE_MAX_SLEEP_TIME_MSEC      100
+
 // Size of the IP Address string coming from file open request
 #define FSI_IPC_OPEN_IP_ADDR_STR_SIZE               128
 
@@ -73,6 +75,9 @@
 // handle in order to account for opendir()/read/closedir() behavior
 // in windows.  QC defect# 14410 has more detail
 #define FSI_MAX_STREAMS                  300
+
+// The minimum amount of seconds between two out-of-streams error reports
+#define MAX_STREAMS_ALERT_FREQUENCY_SEC  SEC_IN_HOUR
 
 // size of NFS handle
 #define FSI_PERSISTENT_HANDLE_N_BYTES    32
