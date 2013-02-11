@@ -46,6 +46,8 @@ extern "C" {
 #define FSI_BLOCK_ALIGN(x, blocksize) \
 (((x) % (blocksize)) ? (((x) / (blocksize)) * (blocksize)) : (x))
 
+#define PT_FSI_CCL_VERSION "3.3.1.102"
+
 #define FSI_COMMAND_TIMEOUT_SEC      900 // When polling for results, number
                                          // of seconds to try before timingout
 #define FSI_COMMAND_LOG_THRESHOLD_SEC 20 // In seconds, if timed responses
@@ -90,10 +92,10 @@ typedef enum fsi_ipc_trace_level {
 
 typedef int (*log_function_t) (int level, const char * message);
 typedef int (*log_level_check_function_t) (int level);
-int ccl_log(const fsi_ipc_trace_level   level,
+  /*int ccl_log(const fsi_ipc_trace_level   level,
             const char                * func,
             const char                * format,
-            ...);
+            ...);*/
 
 // The following functions enable compile-time check with a cost of a function
 // call. Ths function is empty, but due to its  __attribute__ declaration
@@ -119,7 +121,7 @@ compile_time_check_func(const char * fmt, ...)
 #define FSI_TRACE(level, ... )                                             \
 {                                                                          \
   compile_time_check_func( __VA_ARGS__ );                                  \
-  ccl_log(level, __func__, __VA_ARGS__);                                   \
+  CCL_LOG(level, __func__, __VA_ARGS__);                                   \
 }
 
 #define FSI_TRACE_COND_RC(rc, errVal, ... )                                \
@@ -583,7 +585,7 @@ struct ipc_client_stats_t {
 // ---------------------------------------------------------------------------
 // Function Prototypes
 // ---------------------------------------------------------------------------
-int ccl_init(int                        multi_threaded,
+/*int ccl_init(int                        multi_threaded,
              log_function_t             log_fn,
              log_level_check_function_t log_level_check_fn,
              int                        ipc_ccl_to_component_trc_level_map
@@ -865,7 +867,7 @@ int ccl_fsal_try_fastopen_by_index(ccl_context_t       * handle,
 int ccl_find_oldest_handle();
 bool ccl_can_close_handle(int handle_index,
 			  int timeout);
-
+*/
 // ---------------------------------------------------------------------------
 // CCL Up Call ptorotypes - both the Samba VFS layer and the Ganesha PTFSAL
 //     Layer provide a copy of these functions and CCL call them (up calls)

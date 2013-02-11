@@ -71,7 +71,7 @@ void *ptfsal_closeHandle_listener_thread(void *args)
   }
 
   while (1) {
-    msg_bytes = rcv_msg_wait_block(g_closeHandle_req_msgq,
+    msg_bytes = RCV_MSG_WAIT_BLOCK(g_closeHandle_req_msgq,
                                    &msg,
                                    sizeof(struct CommonMsgHdr),
                                    0);
@@ -85,7 +85,7 @@ void *ptfsal_closeHandle_listener_thread(void *args)
               shuffle handle around and there is only one place to
               actually close the handle (which is here) in the code */
 
-      handleIdxFound = ccl_find_oldest_handle();
+      handleIdxFound = CCL_FIND_OLDEST_HANDLE();
       if (handleIdxFound != -1) {
         ccl_up_mutex_lock(&g_close_handle_mutex[handleIdxFound]);
         close_rc = ptfsal_implicit_close_for_nfs(handleIdxFound,
@@ -95,7 +95,7 @@ void *ptfsal_closeHandle_listener_thread(void *args)
       /* Send the response back */
       msgHdr = (struct CommonMsgHdr *) &msg.mtext[0];
       msgHdr->transactionRc = close_rc;
-      msg_bytes = send_msg(g_closeHandle_rsp_msgq,
+      msg_bytes = SEND_MSG(g_closeHandle_rsp_msgq,
                            &msg,
                            sizeof(struct CommonMsgHdr));
     }
@@ -120,7 +120,7 @@ void ptfsal_close_timedout_handle_bkg(void)
     FSI_TRACE(FSI_DEBUG, "Flushing any pending IO for handle %d", index);
     struct msg_t msg;
     int          rc;
-    get_any_io_responses(index, &rc, &msg);
+    GET_ANY_IO_RESPONSES(index, &rc, &msg);
 
     // only poll for timed out handles every PTFSAL_POLLING_HANDLE_TIMEOUT_SEC
     // iterations
@@ -131,7 +131,7 @@ void ptfsal_close_timedout_handle_bkg(void)
                 current_time, g_fsi_handles.m_handle[index].m_nfs_state,
                 g_fsi_handles.m_handle[index].m_hndl_in_use);
 
-      if (ccl_can_close_handle(index,
+      if (CCL_CAN_CLOSE_HANDLE(index,
 			       CCL_POLLING_THREAD_HANDLE_TIMEOUT_SEC)) {
         /* We've found timed out handle and we are sending an explicit
          * close to close it out.
@@ -188,7 +188,7 @@ int ptfsal_implicit_close_for_nfs(int handle_index_to_close, int close_style)
 {
   ccl_context_t context;
 
-  if (ccl_check_handle_index(handle_index_to_close) < 0) {
+  if (CCL_CHECK_HANDLE_INDEX(handle_index_to_close) < 0) {
     FSI_TRACE(FSI_ERR, "Invalid handle index to close = %d",
               handle_index_to_close);
     return -1;
@@ -199,7 +199,7 @@ int ptfsal_implicit_close_for_nfs(int handle_index_to_close, int close_style)
   context.uid       = geteuid();
   context.gid       = getegid();
   FSI_TRACE(FSI_NOTICE, "Closing handle [%d] close_style[%d]", handle_index_to_close, close_style);
-  return (ccl_close(&context, handle_index_to_close, close_style));
+  return (CCL_CLOSE(&context, handle_index_to_close, close_style));
 
 }
 
