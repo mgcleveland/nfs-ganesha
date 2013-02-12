@@ -592,7 +592,7 @@ ptfsal_readdir(fsal_dir_t      * dir_desc,
 
   struct fsi_struct_dir_t * dirp = 
     (struct fsi_struct_dir_t *)
-    &g_fsi_dir_handles.m_dir_handle[dir_hnd_index].m_fsi_struct_dir;
+    &g_fsi_dir_handles_fsal->m_dir_handle[dir_hnd_index].m_fsi_struct_dir;
 
   readdir_rc = CCL_READDIR(&ccl_context, dirp, sbuf);
   if (readdir_rc == 0) {
@@ -621,7 +621,7 @@ ptfsal_closedir(fsal_dir_t * dir_desc)
 
   struct fsi_struct_dir_t * dirp = 
     (struct fsi_struct_dir_t *)
-    &g_fsi_dir_handles.m_dir_handle[dir_hnd_index].m_fsi_struct_dir;
+    &g_fsi_dir_handles_fsal->m_dir_handle[dir_hnd_index].m_fsi_struct_dir;
 
   return CCL_CLOSEDIR(&ccl_context, dirp);
 }
@@ -1297,7 +1297,7 @@ fsi_update_cache_stat(const char * p_filename,
   pthread_mutex_lock(&g_non_io_mutex);
   index = CCL_FIND_HANDLE_BY_NAME_AND_EXPORT(p_filename,&ccl_context);
   if (index != -1) {
-    g_fsi_handles.m_handle[index].m_stat.st_mode = newMode;
+    g_fsi_handles_fsal->m_handle[index].m_stat.st_mode = newMode;
     rc = 0;
   } else {
     FSI_TRACE(FSI_DEBUG, "ERROR: Update cache stat");
@@ -1372,4 +1372,3 @@ void ptfsal_set_fsi_handle_data(fsal_op_context_t * p_context,
             fsi_export_context->mount_point,
             ccl_context->client_address);
 }
-

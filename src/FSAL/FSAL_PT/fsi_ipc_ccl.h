@@ -138,11 +138,12 @@ compile_time_check_func(const char * fmt, ...)
 
 #define WAIT_SHMEM_ATTACH()                                                \
 {                                                                          \
-  while (g_shm_at == 0) {                                                  \
+  while (g_shm_at_fsal == 0) {                                             \
     FSI_TRACE(FSI_INFO, "waiting for shmem attach");                       \
     sleep(1);                                                              \
   }                                                                        \
 }
+
 #define CCL_CLOSE_STYLE_NORMAL             0
 #define CCL_CLOSE_STYLE_FIRE_AND_FORGET    1
 #define CCL_CLOSE_STYLE_NO_INDEX           2
@@ -151,6 +152,7 @@ compile_time_check_func(const char * fmt, ...)
 
 extern int       g_shm_id;              // SHM ID
 extern char    * g_shm_at;              // SHM Base Address
+extern char    * g_shm_at_fsal;              // SHM Base Address
 extern int       g_io_req_msgq;
 extern int       g_io_rsp_msgq;
 extern int       g_non_io_req_msgq;
@@ -160,12 +162,13 @@ extern int       g_shmem_rsp_msgq;
 extern char      g_chdir_dirpath[PATH_MAX];
 extern uint64_t  g_client_pid;
 extern uint64_t  g_server_pid;
-extern struct    file_handles_struct_t g_fsi_handles;     // FSI client
-                                                          // handles
-extern struct    dir_handles_struct_t  g_fsi_dir_handles; // FSI client Dir
-                                                          // handles
-extern struct    acl_handles_struct_t  g_fsi_acl_handles; // FSI client ACL
-                                                          // handles
+
+extern struct file_handles_struct_t * g_fsi_handles_fsal;  // FSI client
+                                                           // handles
+extern struct dir_handles_struct_t  * g_fsi_dir_handles_fsal; // FSI client Dir
+                                                              // handles
+extern struct acl_handles_struct_t  * g_fsi_acl_handles_fsal; // FSI client ACL
+                                                              // handles
 extern uint64_t  g_client_trans_id;  // FSI global transaction id
 extern int       g_close_trace;      // FSI global trace of io rates at close
 extern int       g_multithreaded;    // ganesha = true, samba = false
@@ -582,292 +585,6 @@ struct ipc_client_stats_t {
 // opening it again. 
 #define CCL_MAX_CLOSING_TO_CLOSE_POLLING_COUNT 480
 
-// ---------------------------------------------------------------------------
-// Function Prototypes
-// ---------------------------------------------------------------------------
-/*int ccl_init(int                        multi_threaded,
-             log_function_t             log_fn,
-             log_level_check_function_t log_level_check_fn,
-             int                        ipc_ccl_to_component_trc_level_map
-                                        [FSI_NUM_TRACE_LEVELS]);
-int add_acl_handle(uint64_t fs_acl_handle);
-int add_dir_handle(uint64_t fs_dir_handle);
-int add_fsi_handle(struct file_handle_t * p_new_handle);
-int convert_fsi_name(ccl_context_t   * handle,
-                     const char      * filename,
-                     char            * sv_filename,
-                     const size_t      sv_filename_size);
-int delete_acl_handle(uint64_t aclHandle);
-int delete_dir_handle(int dir_handle_index);
-int delete_fsi_handle(int handle_index);
-int ccl_cache_name_and_handle(char *handle, char *name);
-int ccl_check_handle_index (int handle_index);
-int ccl_find_handle_by_name_and_export(const char * filename,
-                                       ccl_context_t * handle);
-int ccl_find_dir_handle_by_name_and_export(const char * filename,
-                                          ccl_context_t * handle);
-int ccl_set_stat_buf(fsi_stat_struct              * dest,
-                     const struct ClientOpStatRsp * src);
-int ccl_get_name_from_handle(char *handle, char *name);
-int ccl_stat(ccl_context_t * handle,
-             const char        * filename,
-             fsi_stat_struct       * sbuf);
-int ccl_fstat(int                 handle_index,
-              fsi_stat_struct   * sbuf);
-int ccl_stat_by_handle(ccl_context_t           * context,
-                       struct PersistentHandle * handle,
-                       fsi_stat_struct         * sbuf);
-uint64_t get_acl_resource_handle(uint64_t aclHandle);
-int have_pending_io_response(int handle_index);
-int io_msgid_from_index (int index);
-void ld_common_msghdr(struct CommonMsgHdr * p_msg_hdr,
-                      uint64_t             transaction_type,
-                      uint64_t             data_length,
-                      uint64_t             export_id,
-                      int                  handle_index,
-                      int                  fs_handle,
-                      int                  use_crc,
-                      int                  is_IO_q,
-                      const char         * client_ip_addr);
-void ld_uid_gid(uint64_t                * uid,
-                uint64_t                * gid,
-                ccl_context_t   * handle);
-void load_shmem_hdr(struct CommonShmemDataHdr * p_shmem_hdr,
-                    uint64_t             transaction_type,
-                    uint64_t             data_length,
-                    uint64_t             offset,
-                    int                  handle_index,
-                    uint64_t             transaction_id,
-                    int                  use_crc);
-void perform_msg_delay(struct timeval * pdiff_time);
-int rcv_msg_nowait(int     msg_id,
-                   void  * p_msg_buf,
-                   size_t  msg_size,
-                   long    msg_type);
-int rcv_msg_wait(int     msg_id,
-                 void  * p_msg_buf,
-                 size_t  msg_size,
-                 long    msg_type);
-int rcv_msg_wait_block(int     msg_id,
-                       void  * p_msg_buf,
-                       size_t  msg_size,
-                       long    msg_type);
-int wait_for_response(const int                   msg_id,
-                      void                      * p_msg_buf,
-                      const size_t                msg_size,
-                      const long                  msg_type,
-                      const struct CommonMsgHdr * p_hdr,
-                      const uint64_t              transaction_type,
-                      const int                   min_rsp_msg_bytes);
-int send_msg(int          msg_id,
-             const void * p_msg_buf,
-             size_t       msg_size);
-int ccl_chmod(ccl_context_t * handle,
-               const char        * path,
-               mode_t              mode);
-int ccl_chown(ccl_context_t * handle,
-              const char        * path,
-              uid_t               uid,
-              gid_t               gid);
-int ccl_ntimes(ccl_context_t * handle,
-               const char        * filename,
-               uint64_t            atime,
-               uint64_t            mtime);
-int ccl_mkdir(ccl_context_t  * handle,
-               const char        * path,
-               mode_t              mode);
-int ccl_rmdir(ccl_context_t  * handle,
-               const char        * path);
-int ccl_get_real_filename(ccl_context_t * handle,
-                          const char    * path,
-                          const char    * name,
-                          char          * found_name,
-                          const size_t    found_name_max_size);
-uint64_t ccl_disk_free(ccl_context_t * handle,
-                       const char    * path,
-                       uint64_t      * bsize,
-                       uint64_t      * dfree,
-                       uint64_t      * dsize);
-int ccl_unlink(ccl_context_t  * handle,
-                char               * path);
-int ccl_rename(ccl_context_t * handle,
-               const char        * old_name,
-               const char        * new_name);
-int ccl_opendir(ccl_context_t * handle,
-                 const char        * filename,
-                 const char        * mask,
-                 uint32              attr);
-int ccl_closedir(ccl_context_t * handle,
-                  struct fsi_struct_dir_t * dirp);
-int ccl_readdir(ccl_context_t * handle,
-                 struct fsi_struct_dir_t * dirp,
-                 fsi_stat_struct   * sbuf);
-void ccl_seekdir(ccl_context_t * handle,
-                 struct fsi_struct_dir_t * dirp,
-                 long                offset);
-long ccl_telldir(ccl_context_t * handle,
-                 struct fsi_struct_dir_t * dirp);
-int ccl_chdir(ccl_context_t * handle,
-              const char    * path);
-int ccl_fsync(ccl_context_t * handle,
-               int handle_index);
-int ccl_ftruncate(ccl_context_t * handle,
-                   int handle_index,
-                   uint64_t           offset);
-ssize_t ccl_pread(ccl_context_t * handle,
-                   void              * data,
-                   size_t              n,
-                   uint64_t            offset,
-                   uint64_t            max_readahead_offset);
-ssize_t ccl_pwrite(ccl_context_t         * handle,
-                    int                    handle_index,
-                    const void           * data,
-                    size_t                 n,
-                    uint64_t               offset);
-int ccl_open(ccl_context_t   * handle,
-              char                  * path,
-              int                   flags,
-              mode_t                mode);
-int ccl_close_internal(ccl_context_t * handle,
-                       int             handle_index,
-                       int             close_style,
-                       struct file_handle_t *file_handle);
-int ccl_close(ccl_context_t * handle,
-              int             handle_index,
-              int             close_style);
-int merge_errno_rc(int rc_a,
-                   int rc_b);
-int get_any_io_responses(int     handle_index,
-                         int   * p_combined_rc,
-                         struct msg_t* p_msg);
-void issue_read_ahead(struct file_handle_t       * p_pread_hndl,
-                      int                          handle_index,
-                      uint64_t                     offset,
-                      struct msg_t               * p_msg,
-                      struct CommonMsgHdr        * p_pread_hdr,
-                      struct ClientOpPreadReqMsg * p_pread_req,
-                      const ccl_context_t        * handle,
-                      uint64_t                     max_readahead_offset);
-void load_deferred_io_rc(int handle_index,
-                         int cur_error);
-int merge_errno_rc(int rc_a,
-                   int rc_b);
-int parse_io_response(int     handle_index,
-                      struct msg_t * p_msg);
-int read_existing_data(struct file_handle_t * p_pread_hndl,
-                       char                 * p_data,
-                       uint64_t             * p_cur_offset,
-                       uint64_t             * p_cur_length,
-                       int                  * p_pread_rc,
-                       int                  * p_pread_incomplete,
-                       int                    handle_index);
-int update_read_status(struct file_handle_t        * p_pread_hndl,
-                       int                           handle_index,
-                       uint64_t                      cur_offset,
-                       struct msg_t                * p_msg,
-                       struct CommonMsgHdr         * p_pread_hdr,
-                       struct ClientOpPreadReqMsg  * p_pread_req,
-                       const ccl_context_t         * handle,
-                       uint64_t                      max_readahead_offset,
-                       int                         * p_combined_rc);
-int verify_io_response(int                      transaction_type,
-                       int                      cur_index,
-                       struct CommonMsgHdr           * p_msg_hdr,
-                       struct CommonShmemDataHdr     * p_shmem_hdr,
-                       struct io_buf_status_t * p_io_buf_status);
-int wait_free_write_buf(int     handle_index,
-                        int   * p_combined_rc,
-                        struct msg_t* p_msg);
-int flush_write_buffer(int handle_index, ccl_context_t * handle);
-int wait_for_io_results(int handle_index);
-int synchronous_flush_write_buffer(int handle_index, ccl_context_t * handle);
-int ccl_ipc_stats_init();
-void ccl_ipc_stats_set_log_interval(uint64_t interval);
-void ccl_ipc_stats_logger(ccl_context_t * handle);
-void ccl_ipc_stats_on_io_complete(struct timeval * done_time);
-void ccl_ipc_stats_on_io_start(uint64_t delay);
-void ccl_ipc_stats_on_read(uint64_t bytes);
-void ccl_ipc_stats_on_write(uint64_t bytes);
-uint64_t update_stats(struct ipc_client_stats_t * stat, uint64_t value);
-
-// ACL function prototypes
-int ccl_sys_acl_get_entry(ccl_context_t * handle,
-                          acl_t           theacl,
-                          int             entry_id,
-                          acl_entry_t   * entry_p);
-int ccl_sys_acl_get_tag_type(ccl_context_t * handle,
-                             acl_entry_t     entry_d,
-                             acl_tag_t     * tag_type_p);
-int ccl_sys_acl_get_permset(ccl_context_t * handle,
-                            acl_entry_t     entry_d,
-                            acl_permset_t * permset_p);
-void * ccl_sys_acl_get_qualifier(ccl_context_t * handle,
-                                 acl_entry_t     entry_d);
-acl_t ccl_sys_acl_get_file(ccl_context_t * handle,
-                           const char    * path_p,
-                           acl_type_t      type);
-int ccl_sys_acl_clear_perms(ccl_context_t * handle,
-                            acl_permset_t   permset);
-int ccl_sys_acl_add_perm(ccl_context_t * handle,
-                         acl_permset_t   permset,
-                         acl_perm_t      perm);
-acl_t ccl_sys_acl_init(ccl_context_t * handle,
-                       int             count);
-int ccl_sys_acl_create_entry(ccl_context_t * handle,
-                             acl_t         * pacl,
-                             acl_entry_t   * pentry);
-int ccl_sys_acl_set_tag_type(ccl_context_t * handle,
-                             acl_entry_t     entry,
-                             acl_tag_t       tagtype);
-int ccl_sys_acl_set_qualifier(ccl_context_t * handle,
-                              acl_entry_t     entry,
-                              void              * qual);
-int ccl_sys_acl_set_permset(ccl_context_t * handle,
-                            acl_entry_t     entry,
-                            acl_permset_t   permset);
-int ccl_sys_acl_set_file(ccl_context_t * handle,
-                         const char    * name,
-                         acl_type_t      acltype,
-                         acl_t           theacl);
-int ccl_sys_acl_delete_def_file(ccl_context_t * handle,
-                                const char    * path);
-int ccl_sys_acl_get_perm(ccl_context_t * handle,
-                         acl_permset_t   permset,
-                         acl_perm_t      perm);
-int ccl_sys_acl_free_acl(ccl_context_t * handle,
-                         acl_t           posix_acl);
-
-// Prototypes - new for Ganesha
-int ccl_name_to_handle(ccl_context_t           * pvfs_handle,
-                       char                    * path,
-                       struct PersistentHandle * phandle);
-int ccl_handle_to_name(ccl_context_t           * pvfs_handle,
-                       struct PersistentHandle * phandle,
-                       char                    * path);
-int ccl_dynamic_fsinfo(ccl_context_t                      * pvfs_handle,
-                       char                               * path,
-                       struct ClientOpDynamicFsInfoRspMsg * pfs_info);
-int ccl_readlink(ccl_context_t * pvfs_handle,
-                 const char    * path,
-                 char          * link_content);
-int ccl_symlink(ccl_context_t * pvfs_handle,
-                const char    * path,
-                const char    * link_content);
-void ccl_update_handle_last_io_timestamp(int handle_index);
-int ccl_update_handle_nfs_state(int              handle_index,
-                                enum e_nfs_state state,
-                                int              expected_state);
-int ccl_fsal_try_stat_by_index(ccl_context_t           * handle,
-                               int                       handle_index,
-                               char                    * fsal_name,
-                               fsi_stat_struct         * sbuf);
-int ccl_fsal_try_fastopen_by_index(ccl_context_t       * handle,   
-                                   int                   handle_index,
-                                   char                * fsal_name);
-int ccl_find_oldest_handle();
-bool ccl_can_close_handle(int handle_index,
-			  int timeout);
-*/
 // ---------------------------------------------------------------------------
 // CCL Up Call ptorotypes - both the Samba VFS layer and the Ganesha PTFSAL
 //     Layer provide a copy of these functions and CCL call them (up calls)

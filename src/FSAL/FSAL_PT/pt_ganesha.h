@@ -41,8 +41,6 @@
 /* VFS operations structure */
 struct vfs_fn_pointers {
   // leave unimplemented until version checking is implemented in 4.1 code stream
-  /*int (*check_version_fn)(char * version);
-    char * (*get_version_fn)(void);*/
   int (*init_fn)(int                        multi_threaded,
                  log_function_t             log_fn,
                  log_level_check_function_t log_level_check_fn,
@@ -225,10 +223,6 @@ struct vfs_fn_pointers {
                  const char              * func,
                  const char              * format,
                  ...);
-
-  /*int (*up_mutex_lock)(pthread_mutex_t * mutex);
-  int (*up_mutex_unlock)(pthread_mutex_t * mutex);
-  unsigned long (*up_self)();*/
 };
 
 #define CCL_INIT                           g_ccl_function_map.init_fn

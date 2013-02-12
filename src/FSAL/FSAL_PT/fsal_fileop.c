@@ -273,8 +273,8 @@ fsal_status_t PTFSAL_read(fsal_file_t * file_desc,            /* IN */
   if (fsi_check_handle_index (handle_index) < 0) {
     Return(ERR_FSAL_FAULT, 0, INDEX_FSAL_read);
   }
-  location = g_fsi_handles.m_handle[handle_index].m_file_loc;
-  file_size = g_fsi_handles.m_handle[handle_index].m_stat.st_size;
+  location = g_fsi_handles_fsal->m_handle[handle_index].m_file_loc;
+  file_size = g_fsi_handles_fsal->m_handle[handle_index].m_stat.st_size;
   FSI_TRACE(FSI_DEBUG, "FSI - read from handle %d\n",handle_index);
 
   i_size = (size_t) buffer_size;
@@ -389,8 +389,8 @@ fsal_status_t PTFSAL_write(fsal_file_t * file_desc,           /* IN */
   if (fsi_check_handle_index (handle_index) < 0) {
     Return(ERR_FSAL_FAULT, 0, INDEX_FSAL_write);
   }
-  location = g_fsi_handles.m_handle[handle_index].m_file_loc;
-  file_size = g_fsi_handles.m_handle[handle_index].m_stat.st_size;
+  location = g_fsi_handles_fsal->m_handle[handle_index].m_file_loc;
+  file_size = g_fsi_handles_fsal->m_handle[handle_index].m_stat.st_size;
   FSI_TRACE(FSI_DEBUG, "FSI - write to handle %d\n",handle_index);
 
   /** @todo: manage fsal_size_t to size_t convertion */

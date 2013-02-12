@@ -68,6 +68,12 @@ pthread_mutex_t g_statistics_mutex;
 pthread_t g_pthread_closehandle_lisetner;
 pthread_t g_pthread_polling_closehandler;
 
+// FSAL analogs to CCL variables and structures
+char * g_shm_at_fsal;
+struct file_handles_struct_t * g_fsi_handles_fsal;
+struct dir_handles_struct_t  * g_fsi_dir_handles_fsal;
+struct acl_handles_struct_t  * g_fsi_acl_handles_fsal;
+
 #define COMPONENT_FSAL_PT  5   // COMPONENT_FSAL
 
 int PTFSAL_log(int level, const char * message)
@@ -353,6 +359,19 @@ pt_ganesha_fsal_ccl_init()
   load_dynamic_function(&g_fsal_fsi_handles,
                         "g_fsi_handles");
 
+  /* load and map variables that reside in the CCL shared library */
+  void * g_shm_at_obj = dlsym(g_ccl_lib_handle, "g_shm_at");
+  g_shm_at_fsal = (char *)g_shm_at_obj;
+
+  void * g_fsi_handles_obj = dlsym(g_ccl_lib_handle, "g_fsi_handles");
+  g_fsi_handles_fsal = (struct file_handles_struct_t *)g_fsi_handles_obj;
+
+  void * g_fsi_dir_handles_obj = dlsym(g_ccl_lib_handle, "g_fsi_dir_handles");
+  g_fsi_dir_handles_fsal = (struct file_handles_struct_t *)g_fsi_handles_obj;
+
+  void * g_fsi_acl_handles_obj = dlsym(g_ccl_lib_handle, "g_fsi_acl_handles");
+  g_fsi_acl_handles_fsal = (struct file_handles_struct_t *)g_fsi_handles_obj;
+  
   return 0;
 }
 
@@ -441,11 +460,11 @@ PTFSAL_terminate()
   }
 
   for (index = FSI_CIFS_RESERVED_STREAMS;
-       index < g_fsi_handles.m_count;
+       index < g_fsi_handles_fsal->m_count;
        index++) {
-    if (g_fsi_handles.m_handle[index].m_hndl_in_use != 0) {
-      if ((g_fsi_handles.m_handle[index].m_nfs_state == NFS_CLOSE) ||
-          (g_fsi_handles.m_handle[index].m_nfs_state == NFS_OPEN)) {
+    if (g_fsi_handles_fsal->m_handle[index].m_hndl_in_use != 0) {
+      if ((g_fsi_handles_fsal->m_handle[index].m_nfs_state == NFS_CLOSE) ||
+          (g_fsi_handles_fsal->m_handle[index].m_nfs_state == NFS_OPEN)) {
   
         // ignore error code, just trying to clean up while going down
         // and want to continue trying to close out other open files
