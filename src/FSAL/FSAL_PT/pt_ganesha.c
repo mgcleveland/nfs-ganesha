@@ -999,13 +999,14 @@ int
 ptfsal_ntimes(fsal_op_context_t * p_context,
               const char        * filename,
               uint64_t            atime,
-              uint64_t            mtime)
+              uint64_t            mtime,
+	      uint64_t            btime)
 {
   ccl_context_t ccl_context;
 
   ptfsal_set_fsi_handle_data(p_context, &ccl_context);
 
-  return CCL_NTIMES(&ccl_context, filename, atime, mtime);
+  return CCL_NTIMES(&ccl_context, filename, atime, mtime, btime);
 }
 // -----------------------------------------------------------------------------
 int

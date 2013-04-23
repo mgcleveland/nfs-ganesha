@@ -581,7 +581,7 @@ PTFSAL_setattrs(fsal_handle_t      * p_filehandle,       /* IN */
               fsi_name, p_filehandle->data.handle.f_handle); 
    
     rc = ptfsal_ntimes(p_context, fsi_name, buffxstat.buffstat.st_atime, 
-                       buffxstat.buffstat.st_mtime);
+                       buffxstat.buffstat.st_mtime, buffxstat.buffstat.st_ctime);
     if (rc == -1) {
       FSI_TRACE(FSI_ERR, "ntime FAILED");
       Return (ERR_FSAL_PERM, 2, INDEX_FSAL_setattrs);

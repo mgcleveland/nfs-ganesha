@@ -81,7 +81,8 @@ struct vfs_fn_pointers {
   int (*ntimes_fn)(ccl_context_t * handle,
                    const char        * filename,
                    uint64_t            atime,
-                   uint64_t            mtime);
+                   uint64_t            mtime,
+		   uint64_t            btime);
   int (*mkdir_fn)(ccl_context_t  * handle,
                   const char        * path,
                   mode_t              mode);
@@ -431,7 +432,8 @@ int ptfsal_chmod(fsal_op_context_t * p_context,
 int ptfsal_ntimes(fsal_op_context_t * p_context,
                   const char        * filename,
                   uint64_t            atime,
-                  uint64_t            mtime);
+                  uint64_t            mtime,
+		  uint64_t            btime);
 
 int ptfsal_mkdir(fsal_handle_t     * p_parent_directory_handle,
                  fsal_name_t       * p_dirname,
